@@ -1,38 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
-import '../models/products_model.dart';
-import '../repositories/products_repo.dart';
+import '../blocs/electronics_bloc/electronics_bloc_bloc.dart';
+import '../blocs/jewelery_bloc/jewelery_bloc_bloc.dart';
 
-class HomePage extends StatefulWidget {
+class HomePage extends StatelessWidget {
   const HomePage({super.key});
-
-  @override
-  State<HomePage> createState() => _HomePageState();
-}
-
-class _HomePageState extends State<HomePage> {
-  bool isLoading = true;
-  final ProductsRepo productsRepo = ProductsRepo();
-  List<ProductsModel> electronicData = [];
-  List<ProductsModel> jeweleryData = [];
-
-  getJeweleryData() async {
-    jeweleryData = await productsRepo.getJeweleries();
-    getElectronicData();
-  }
-
-  getElectronicData() async {
-    electronicData = await productsRepo.getElectronics();
-    setState(() {
-      isLoading = false;
-    });
-  }
-
-  @override
-  void initState() {
-    getJeweleryData();
-    super.initState();
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -49,37 +22,64 @@ class _HomePageState extends State<HomePage> {
               width: size.width,
               child: Column(
                 children: [
-                  isLoading
-                      ? const Center(
-                          child: CircularProgressIndicator(),
-                        )
-                      : Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const Padding(
-                              padding: EdgeInsets.all(5.0),
-                              child: Text(
-                                'Jewellery',
-                                style: TextStyle(
-                                    fontSize: 22, fontWeight: FontWeight.w500),
-                              ),
-                            ),
-                            getUI(size: size, uiData: jeweleryData),
-                            const SizedBox(height: 10),
-                            const Padding(
-                              padding: EdgeInsets.all(5.0),
-                              child: Text(
-                                'Electronics',
-                                style: TextStyle(
-                                    fontSize: 22, fontWeight: FontWeight.w500),
-                              ),
-                            ),
-                            getUI(
-                                size: size,
-                                uiData: electronicData,
-                                scrollDirection: Axis.vertical),
-                          ],
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Padding(
+                        padding: EdgeInsets.all(5.0),
+                        child: Text(
+                          'Jewellery',
+                          style: TextStyle(
+                              fontSize: 22, fontWeight: FontWeight.w500),
                         ),
+                      ),
+                      BlocBuilder(
+                        bloc: BlocProvider.of<JeweleryBloc>(context),
+                        builder: (context, state) {
+                          if (state is JeweleryBlocInitialState) {
+                            return const Center(
+                              child: CircularProgressIndicator(),
+                            );
+                          } else if (state is JeweleryBlocLoadedState) {
+                            return getUI(
+                                size: size, uiData: state.jeweleryData);
+                          } else {
+                            return const Center(
+                              child: Text('Something went wrong'),
+                            );
+                          }
+                        },
+                      ),
+                      const SizedBox(height: 10),
+                      const Padding(
+                        padding: EdgeInsets.all(5.0),
+                        child: Text(
+                          'Electronics',
+                          style: TextStyle(
+                              fontSize: 22, fontWeight: FontWeight.w500),
+                        ),
+                      ),
+                      BlocBuilder(
+                        bloc: BlocProvider.of<ElectronicsBloc>(context),
+                        builder: (context, state) {
+                          if (state is ElectronicsBlocInitialState) {
+                            return const Center(
+                              child: CircularProgressIndicator(),
+                            );
+                          } else if (state is ElectronicsBlocLoadedState) {
+                            return getUI(
+                                size: size,
+                                uiData: state.electronicsData,
+                                scrollDirection: Axis.vertical);
+                          } else {
+                            return const Center(
+                              child: Text('Something went wrong'),
+                            );
+                          }
+                        },
+                      ),
+                    ],
+                  ),
                 ],
               ),
             )),
